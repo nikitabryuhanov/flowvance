@@ -1,0 +1,16 @@
+<h3>Восстановление пароля</h3>
+
+<form method="post">
+    {% csrf_token %}
+    <label for="email">Введите ваш email:</label>
+    <input type="email" name="email" required class="form-control mb-3" placeholder="example@mail.com">
+    <button class="btn btn-primary" type="submit">Отправить код</button>
+</form>
+
+{% if messages %}
+  <ul class="messages mt-3">
+    {% for message in messages %}
+      <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}

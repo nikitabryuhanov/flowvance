@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная | Flowvance{% endblock %}
+
+{% block content %}
+<div class="p-5 bg-white rounded shadow text-center">
+    <h1 class="display-5 mb-3">Добро пожаловать в <span class="text-primary">Flowvance</span>!</h1>
+    <p class="lead">Управляй задачами, отслеживай прогресс и получай напоминания.</p>
+    <a href="{% url 'tasks' %}" class="btn btn-primary btn-lg">Задачи</a>
+    <a href="{% url 'activity' %}" class="btn btn-primary btn-lg">Активность</a>
+    <a href="{% url 'profile' %}" class="btn btn-primary btn-lg">Профиль</a>
+</div>
+{% endblock %}

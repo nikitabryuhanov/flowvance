@@ -1,0 +1,6 @@
+<h3>Подтверждение смены почты</h3>
+<form method="post">
+    {% csrf_token %}
+    <input type="text" name="code" placeholder="Введите код" class="form-control mb-3" required>
+    <button class="btn btn-success">Подтвердить</button>
+</form>

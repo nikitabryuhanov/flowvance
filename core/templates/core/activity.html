@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Активность | Flowvance{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">📊 Активность</h2>
+
+<div class="row g-4 mb-5">
+    <!-- Статистика -->
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm">
+            <h5>Всего задач: {{ total }}</h5>
+            <h6>✅ Выполнено: {{ completed }}</h6>
+            <h6>📌 Осталось: {{ remaining }}</h6>
+            <h6>⏰ Просрочено: {{ overdue }}</h6>
+        </div>
+    </div>
+
+    <!-- График по статусам -->
+    <div class="col-md-8">
+        <canvas id="statusChart" height="180"></canvas>
+    </div>
+</div>
+
+<!-- Календарь -->
+<h4 class="mb-3">📅 Календарь задач</h4>
+<div id="calendar" class="mb-5"></div>
+<a href="{% url 'home' %}" class="btn btn-primary">На главную</a>
+
+<!-- JS: Статусы -->
+<script>
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    const statusChart = new Chart(statusCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Невыполнено', 'В процессе', 'Выполнено'],
+            datasets: [{
+                label: 'Количество задач',
+                data: [{{ not_done }}, {{ in_progress }}, {{ completed }}],
+                backgroundColor: ['rgba(220, 53, 69, 0.7)', 'rgba(255, 193, 7, 0.7)', 'rgba(40, 167, 69, 0.7)'],
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    stepSize: 1
+                }
+            }
+        }
+    });
+</script>
+
+<!-- JS: Календарь -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'ru',
+            height: 600,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: ''
+            },
+            events: '/activity/calendar/data/',
+            eventDidMount: function(info) {
+                const tooltip = `${info.event.title} — ${info.event.extendedProps.status}`;
+                info.el.title = tooltip;
+            },
+            dateClick: function(info) {
+                const date = info.dateStr;
+                window.location.href = `/tasks/new/?date=${date}`;
+            },
+            eventClick: function(info) {
+                const taskId = info.event.extendedProps.task_id;
+                if (taskId) {
+                    window.location.href = `/tasks/edit/${taskId}/`;
+                }
+            }
+        });
+        calendar.render();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,6 @@
+<h3>Смена почты</h3>
+<form method="post">
+    {% csrf_token %}
+    <input type="email" name="new_email" placeholder="Новая почта" class="form-control mb-3" required>
+    <button class="btn btn-primary">Получить код</button>
+</form>

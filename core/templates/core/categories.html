@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Категории | Flowvance{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">📂 Категории</h2>
+
+<a href="{% url 'category_create' %}" class="btn btn-success mb-3">➕ Добавить категорию</a>
+
+<ul class="list-group">
+  {% for category in categories %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      {{ category.name }}
+      <a href="{% url 'category_delete' category.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+    </li>
+  {% empty %}
+    <li class="list-group-item">Нет категорий</li>
+  {% endfor %}
+</ul>
+
+<a href="{% url 'tasks' %}" class="btn btn-link mt-4">← Назад к задачам</a>
+{% endblock %}
