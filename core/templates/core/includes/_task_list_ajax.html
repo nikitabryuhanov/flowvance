@@ -5,7 +5,7 @@
         <div class="card h-100 shadow-sm border-0">
             <div class="card-body">
                 <h5 class="card-title">{{ task.title }}</h5>
-                <span class="badge bg-info text-dark">
+                <span class="badge {% if task.status == 'planned' %}bg-danger{% elif task.status == 'in_progress' %}bg-warning text-dark{% elif task.status == 'done' %}bg-success{% endif %}">
                     {% if task.status == 'planned' %}🕓 Запланировано
                     {% elif task.status == 'in_progress' %}🚧 В процессе
                     {% elif task.status == 'done' %}✅ Выполнено
@@ -18,7 +18,7 @@
             </div>
 
             <div class="card-footer bg-white border-0 d-flex flex-wrap gap-2">
-                <a href="{% url 'update_task_status' task.pk 'planned' %}" class="btn btn-outline-secondary btn-sm">Запланировано</a>
+                <a href="{% url 'update_task_status' task.pk 'planned' %}" class="btn btn-outline-danger btn-sm">Запланировано</a>
                 <a href="{% url 'update_task_status' task.pk 'in_progress' %}" class="btn btn-outline-warning btn-sm">В процессе</a>
                 <a href="{% url 'update_task_status' task.pk 'done' %}" class="btn btn-outline-success btn-sm">Выполнено</a>
                 <a href="{% url 'task_edit' task.pk %}" class="btn btn-sm btn-primary">Редактировать</a>
