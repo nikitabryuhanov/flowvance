@@ -5,7 +5,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <h5 class="card-title">{{ task.title }}</h5>
-                        <p class="card-text">{{ task.description|default:"Нет описания" }}</p>
+                        <p class="card-text" style="word-break: break-word;">{{ task.description|default:"Нет описания" }}</p>
                     </div>
                     <span class="badge bg-{% if task.status == 'done' %}success{% elif task.status == 'in_progress' %}warning text-dark{% else %}secondary{% endif %}">
                         {{ task.get_status_display }}
