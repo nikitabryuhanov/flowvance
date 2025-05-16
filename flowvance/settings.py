@@ -131,7 +131,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'core.CustomUser'
 
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = '/'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.mail.ru'
@@ -142,3 +142,6 @@ EMAIL_HOST_PASSWORD = 'uZYdCjy3resGC9qDJvZx'  # Пароль приложени�
 DEFAULT_FROM_EMAIL = 'Flowvance <flowvance@mail.ru>'  # Должен совпадать с EMAIL_HOST_USER
 
 EMAIL_FAIL_SILENTLY = False
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

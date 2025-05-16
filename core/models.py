@@ -6,6 +6,7 @@ import uuid
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     receive_notifications = models.BooleanField(default=False)
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
     class Meta:
         db_table = 'core_customuser'
@@ -34,7 +35,7 @@ class Task(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    due_date = models.DateField()
+    due_date = models.DateTimeField(verbose_name="Дедлайн", null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     priority = models.CharField(max_length=1, choices=PRIORITY_CHOICES, default='2')
     status = models.CharField(

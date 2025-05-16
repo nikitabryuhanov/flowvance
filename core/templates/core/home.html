@@ -1,13 +1,124 @@
 {% extends 'base.html' %}
-
 {% block title %}Главная | Flowvance{% endblock %}
 
 {% block content %}
-<div class="p-5 bg-white rounded shadow text-center">
+<div class="p-5 bg-white rounded shadow text-center mb-5">
     <h1 class="display-5 mb-3">Добро пожаловать в <span class="text-primary">Flowvance</span>!</h1>
-    <p class="lead">Управляй задачами, отслеживай прогресс и получай напоминания.</p>
-    <a href="{% url 'tasks' %}" class="btn btn-primary btn-lg">Задачи</a>
-    <a href="{% url 'activity' %}" class="btn btn-primary btn-lg">Активность</a>
-    <a href="{% url 'profile' %}" class="btn btn-primary btn-lg">Профиль</a>
+    <p class="lead">Управляй задачами, отслеживай прогресс и активность.</p>
+
+    <div class="row row-cols-1 row-cols-md-3 g-3 mt-4">
+        <div class="col">
+            <a href="{% url 'tasks' %}" class="btn btn-primary btn-lg w-100">Задачи</a>
+        </div>
+        <div class="col">
+            <a href="{% url 'activity' %}" class="btn btn-primary btn-lg w-100">Активность</a>
+        </div>
+        <div class="col">
+            <a href="{% url 'profile' %}" class="btn btn-primary btn-lg w-100">Профиль</a>
+        </div>
+    </div>
 </div>
+
+{% if page_obj and page_obj.object_list %}
+<!-- Блок с задачами -->
+<div class="bg-white p-4 rounded shadow mb-5" id="task-cards">
+    {% include 'core/includes/_task_cards.html' %}
+</div>
+{% endif %}
+
+<!-- График по статусам -->
+<div class="bg-white p-4 rounded shadow mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+        <h4 class="mb-0">
+            <a href="{% url 'activity' %}" class="text-decoration-none text-dark">📊 График по статусам задач</a>
+        </h4>
+        <div class="d-flex gap-2 flex-wrap">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input status-toggle" type="checkbox" checked id="toggle-done" data-index="0">
+                <label class="form-check-label" for="toggle-done">✅ Выполнено</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input status-toggle" type="checkbox" checked id="toggle-progress" data-index="1">
+                <label class="form-check-label" for="toggle-progress">🚧 В процессе</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input status-toggle" type="checkbox" checked id="toggle-planned" data-index="2">
+                <label class="form-check-label" for="toggle-planned">🕓 Запланировано</label>
+            </div>
+        </div>
+    </div>
+    <canvas id="statusChart" height="120"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('statusChart').getContext('2d');
+const allLabels = ['Запланировано', 'В процессе', 'Выполнено'];
+const allData = [{{ planned }}, {{ in_progress }}, {{ completed }}];
+const allColors = ['rgba(220, 53, 69, 0.7)', 'rgba(255, 193, 7, 0.7)', 'rgba(40, 167, 69, 0.7)'];
+
+const statusChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [...allLabels],
+        datasets: [{
+            label: 'Количество задач',
+            data: [...allData],
+            backgroundColor: [...allColors],
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+    document.querySelectorAll('.status-toggle').forEach(toggle => {
+        toggle.addEventListener('change', function () {
+            const index = parseInt(this.dataset.index);
+            const dataset = statusChart.data.datasets[0];
+
+            if (this.checked) {
+                statusChart.data.labels[index] = allLabels[index];
+                dataset.data[index] = allData[index];
+                dataset.backgroundColor[index] = allColors[index];
+            } else {
+                statusChart.data.labels[index] = '';
+                dataset.data[index] = 0;
+                dataset.backgroundColor[index] = 'rgba(0,0,0,0)';
+            }
+
+            statusChart.update();
+        });
+    });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.body.addEventListener('click', function (e) {
+        if (e.target.classList.contains('page-link-ajax')) {
+            e.preventDefault();
+            const page = e.target.dataset.page;
+
+            fetch(`{% url 'home_tasks_ajax' %}?page=${page}`, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('task-cards').innerHTML = html;
+                window.scrollTo({ top: document.getElementById('task-cards').offsetTop - 100, behavior: 'smooth' });
+            });
+        }
+    });
+});
+</script>
 {% endblock %}

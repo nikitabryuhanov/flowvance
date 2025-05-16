@@ -32,7 +32,7 @@
     const statusChart = new Chart(statusCtx, {
         type: 'bar',
         data: {
-            labels: ['Невыполнено', 'В процессе', 'Выполнено'],
+            labels: ['Запланировано', 'В процессе', 'Выполнено'],
             datasets: [{
                 label: 'Количество задач',
                 data: [{{ not_done }}, {{ in_progress }}, {{ completed }}],
@@ -74,6 +74,16 @@
             eventDidMount: function(info) {
                 const tooltip = `${info.event.title} — ${info.event.extendedProps.status}`;
                 info.el.title = tooltip;
+                
+                // Устанавливаем цвет в зависимости от статуса
+                const status = info.event.extendedProps.status;
+                if (status === 'Запланировано') {
+                    info.el.style.backgroundColor = 'rgba(220, 53, 69, 0.7)';
+                } else if (status === 'В процессе') {
+                    info.el.style.backgroundColor = 'rgba(255, 193, 7, 0.7)';
+                } else if (status === 'Выполнено') {
+                    info.el.style.backgroundColor = 'rgba(40, 167, 69, 0.7)';
+                }
             },
             dateClick: function(info) {
                 const date = info.dateStr;

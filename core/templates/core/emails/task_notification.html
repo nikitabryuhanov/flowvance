@@ -1,0 +1,21 @@
+<h2 style="color:#0d6efd;">Привет, {{ user.username }} 👋</h2>
+
+{% if upcoming %}
+<p><strong>📅 Завтра нужно выполнить:</strong></p>
+<ul>
+    {% for task in upcoming %}
+    <li><strong>{{ task.title }}</strong> — до {{ task.due_date|date:"d.m.Y H:i" }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if overdue %}
+<p><strong style="color:#dc3545;">⚠️ Просроченные задачи:</strong></p>
+<ul>
+    {% for task in overdue %}
+    <li><strong>{{ task.title }}</strong> — до {{ task.due_date|date:"d.m.Y H:i" }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<p>Не забудь зайти в <a href="{{ site_url }}">Flowvance</a> и разобраться с задачами 💪</p>

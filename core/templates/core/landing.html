@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Добро пожаловать | Flowvance{% endblock %}
+
+{% block content %}
+<div class="p-5 bg-white rounded shadow text-center">
+    <h1 class="display-4 mb-3">Добро пожаловать в <span class="text-primary">Flowvance</span></h1>
+    <p class="lead mb-4">Управляйте задачами, отслеживайте прогресс, и оставайтесь продуктивными каждый день.</p>
+    <a href="{% url 'login' %}" class="btn btn-primary btn-lg me-2">Войти</a>
+    <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg">Регистрация</a>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+<div class="d-flex flex-column gap-3">
+    {% for task in page_obj.object_list %}
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="card-title">{{ task.title }}</h5>
+                        <p class="card-text">{{ task.description|default:"Нет описания" }}</p>
+                    </div>
+                    <span class="badge bg-{% if task.status == 'done' %}success{% elif task.status == 'in_progress' %}warning text-dark{% else %}secondary{% endif %}">
+                        {{ task.get_status_display }}
+                    </span>
+                </div>
+                {% if task.due_date %}
+                    <p class="card-text mt-2">
+                        <small class="text-muted">Дедлайн: {{ task.due_date }}</small>
+                    </p>
+                {% endif %}
+                <div class="mt-2">
+                    <a href="{% url 'task_edit' task.pk %}" class="btn btn-sm btn-outline-primary">Редактировать</a>
+                    <a href="{% url 'task_delete' task.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p class="text-muted">У вас пока нет задач.</p>
+    {% endfor %}
+</div>
+
+<!-- Пагинация -->
+{% if page_obj.has_other_pages %}
+<nav>
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link page-link-ajax" data-page="{{ page_obj.previous_page_number }}" href="?page={{ page_obj.previous_page_number }}">«</a>
+            </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                <a class="page-link page-link-ajax" data-page="{{ num }}" href="?page={{ num }}">{{ num }}</a>
+            </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link page-link-ajax" data-page="{{ page_obj.next_page_number }}" href="?page={{ page_obj.next_page_number }}">»</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}

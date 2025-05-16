@@ -2,32 +2,58 @@
 {% block title %}Профиль | Flowvance{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Личный кабинет</h2>
+<h2 class="mb-4 text-center fw-bold">👤 Личный кабинет</h2>
 
-<div class="card shadow-sm p-4 bg-white">
-    <form method="post">
+<div class="card shadow-lg p-4 bg-white border-0 rounded-4">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" value="{{ request.user.email }}" class="form-control" readonly>
-            <a href="{% url 'request_email_change' %}" class="btn btn-outline-secondary mt-3">Сменить почту</a>
+
+        <!-- Аватар -->
+        <div class="mb-4 text-center">
+            {% if request.user.avatar %}
+                <img src="{{ request.user.avatar.url }}" class="rounded-circle shadow" style="width: 150px; height: 150px; object-fit: cover;"><br>
+                <div class="form-check d-inline-block mt-3">
+                    <input class="form-check-input" type="checkbox" name="remove_avatar" id="remove_avatar">
+                    <label class="form-check-label" for="remove_avatar">Удалить аватар</label>
+                </div>
+            {% else %}
+                <p class="text-muted">Аватар не установлен</p>
+            {% endif %}
+            <input type="file" name="avatar" accept="image/*" class="form-control mt-3 rounded-pill">
         </div>
+
+        <!-- Email -->
         <div class="mb-3">
-            <label for="username" class="form-label">Логин</label>
+            <label class="form-label fw-semibold">📧 Email</label>
+            <input type="email" name="email" value="{{ request.user.email }}" class="form-control" readonly>
+            <a href="{% url 'request_email_change' %}" class="btn btn-outline-secondary mt-2 btn-sm rounded-pill">✏️ Сменить почту</a>
+        </div>
+
+        <!-- Логин -->
+        <div class="mb-3">
+            <label for="username" class="form-label fw-semibold">🆔 Логин</label>
             <input type="text" name="username" id="username" class="form-control" value="{{ user.username }}">
         </div>
 
-        <button type="submit" class="btn btn-success">💾 Сохранить</button>
-        <a href="{% url 'request_password_reset' %}" class="btn btn-outline-warning ms-2">🔐 Сброс пароля по почте</a>
-    </form>
-    {% if messages %}
-              <div class="mt-3">
-                {% for message in messages %}
-                  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                {% endfor %}
-              </div>
-            {% endif %}
-</div>
+        <!-- Уведомления -->
+        <div class="form-check form-switch mb-4">
+            <input class="form-check-input" type="checkbox" name="receive_notifications" id="receive_notifications" {% if user.receive_notifications %}checked{% endif %}>
+            <label class="form-check-label" for="receive_notifications">🔔 Получать уведомления</label>
+        </div>
 
-<a href="{% url 'home' %}" class="btn btn-link mt-4">← На главную</a>
+        <!-- Кнопки -->
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-success rounded-pill px-4">💾 Сохранить</button>
+            <a href="{% url 'password_reset' %}" class="btn btn-outline-warning rounded-pill">🔐 Сброс пароля</a>
+        </div>
+    </form>
+
+    {% if messages %}
+        <div class="mt-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} rounded-pill">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

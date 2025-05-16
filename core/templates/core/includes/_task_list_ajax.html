@@ -1,0 +1,73 @@
+{% if tasks %}
+<div class="row row-cols-1 row-cols-md-2 g-4">
+    {% for task in tasks %}
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="card-title">{{ task.title }}</h5>
+                <span class="badge bg-info text-dark">
+                    {% if task.status == 'planned' %}🕓 Запланировано
+                    {% elif task.status == 'in_progress' %}🚧 В процессе
+                    {% elif task.status == 'done' %}✅ Выполнено
+                    {% endif %}
+                </span>
+                <p class="card-text mt-2">{{ task.description }}</p>
+                <small class="text-muted">Создана: {{ task.created_at|date:"d.m.Y H:i" }}</small><br>
+                <small class="text-muted">Дедлайн: {{ task.due_date }}</small><br>
+                <small>Приоритет: {{ task.get_priority_display }}</small>
+            </div>
+
+            <div class="card-footer bg-white border-0 d-flex flex-wrap gap-2">
+                <a href="{% url 'update_task_status' task.pk 'planned' %}" class="btn btn-outline-secondary btn-sm">Запланировано</a>
+                <a href="{% url 'update_task_status' task.pk 'in_progress' %}" class="btn btn-outline-warning btn-sm">В процессе</a>
+                <a href="{% url 'update_task_status' task.pk 'done' %}" class="btn btn-outline-success btn-sm">Выполнено</a>
+                <a href="{% url 'task_edit' task.pk %}" class="btn btn-sm btn-primary">Редактировать</a>
+                <a href="{% url 'task_delete' task.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+            </div>
+
+            {% if categories %}
+            <form method="post" action="{% url 'assign_category' task.id %}" class="mt-2 d-flex gap-2 px-3 pb-3 category-form" data-task-id="{{ task.id }}">
+                {% csrf_token %}
+                <select name="category_id" class="form-select form-select-sm category-select" style="width: auto;">
+                    <option value="">Без категории</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}"
+                            {% if category in task.categories.all %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-outline-primary btn-sm">📂 Присвоить категорию</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if tasks.paginator.num_pages > 1 %}
+<div class="mt-4 d-flex justify-content-center">
+    <nav>
+        <ul class="pagination">
+            {% if tasks.has_previous %}
+                <li class="page-item">
+                    <a class="page-link page-link-ajax" data-page="{{ tasks.previous_page_number }}" href="?page={{ tasks.previous_page_number }}&sort={{ request.GET.sort }}&order={{ request.GET.order }}&category={{ selected_category }}">«</a>
+                </li>
+            {% endif %}
+            {% for page in tasks.paginator.page_range %}
+                <li class="page-item {% if page == tasks.number %}active{% endif %}">
+                    <a class="page-link page-link-ajax" data-page="{{ page }}" href="?page={{ page }}&sort={{ request.GET.sort }}&order={{ request.GET.order }}&category={{ selected_category }}">{{ page }}</a>
+                </li>
+            {% endfor %}
+            {% if tasks.has_next %}
+                <li class="page-item">
+                    <a class="page-link page-link-ajax" data-page="{{ tasks.next_page_number }}" href="?page={{ tasks.next_page_number }}&sort={{ request.GET.sort }}&order={{ request.GET.order }}&category={{ selected_category }}">»</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+{% else %}
+<p class="text-muted">У вас пока нет задач.</p>
+{% endif %}

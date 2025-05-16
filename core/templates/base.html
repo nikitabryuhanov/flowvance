@@ -25,10 +25,13 @@
             transform: scale(1.02);
             transition: all 0.2s ease-in-out;
         }
+        .navbar {
+            background-color: #03045E;
+        }
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
             <img src="{% static 'core/images/logo.png' %}" alt="Flowvance Logo" height="32">
@@ -43,8 +46,11 @@
                 <li class="nav-item"><a class="nav-link" href="{% url 'activity' %}">Активность</a></li>
             </ul>
             {% if user.is_authenticated %}
-            <span class="navbar-text me-3 text-white">Привет, {{ user.username }}!</span>
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-3 text-white">
+                {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" alt="Аватар">
+                {% endif %}
+                <span>Привет, {{ user.username }}!</span>
                 <a href="{% url 'profile' %}" class="btn btn-outline-light btn-sm">Профиль</a>
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
@@ -59,6 +65,7 @@
 <div class="container fade-in">
     {% block content %}{% endblock %}
 </div>
+
 <script>
 function toggleTheme() {
     const body = document.getElementById("theme-body");
@@ -82,5 +89,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
+{% block scripts %}{% endblock %}
 </body>
 </html>
