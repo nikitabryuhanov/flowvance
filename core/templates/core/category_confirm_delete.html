@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Удаление категории | Flowvance{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Удаление категории</h2>
+    
+    <div class="alert alert-warning">
+        <p>Вы уверены, что хотите удалить категорию "{{ category.name }}"?</p>
+        {% if is_last_category %}
+        <p class="mb-0"><strong>Внимание!</strong> Это ваша последняя категория.</p>
+        {% endif %}
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Удалить</button>
+        <a href="{% url 'category_list' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+
+    {% if is_last_category %}
+    <div class="mt-4">
+        <p>После удаления вы можете:</p>
+        <a href="{% url 'category_create' %}" class="btn btn-success">Создать новую категорию</a>
+        <a href="{% url 'tasks' %}" class="btn btn-primary">Вернуться к задачам</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

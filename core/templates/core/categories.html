@@ -4,6 +4,16 @@
 {% block content %}
 <h2 class="mb-4">📂 Категории</h2>
 
+{% if messages %}
+<div class="messages mb-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <a href="{% url 'category_create' %}" class="btn btn-success mb-3">➕ Добавить категорию</a>
 
 <ul class="list-group">
@@ -17,5 +27,10 @@
   {% endfor %}
 </ul>
 
-<a href="{% url 'tasks' %}" class="btn btn-link mt-4">← Назад к задачам</a>
+<div class="mt-4">
+    <a href="{% url 'tasks' %}" class="btn btn-link">← Назад к задачам</a>
+    {% if not categories %}
+    <a href="{% url 'category_create' %}" class="btn btn-success">Создать первую категорию</a>
+    {% endif %}
+</div>
 {% endblock %}
