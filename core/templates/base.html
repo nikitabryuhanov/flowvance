@@ -49,6 +49,8 @@
             <div class="d-flex align-items-center gap-3 text-white">
                 {% if user.avatar %}
                     <img src="{{ user.avatar.url }}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" alt="Аватар">
+                {% else %}
+                    <img src="{% static 'img/default-icon.png' %}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" alt="Аватар">
                 {% endif %}
                 <span>Привет, {{ user.username }}!</span>
                 <a href="{% url 'profile' %}" class="btn btn-outline-light btn-sm">Профиль</a>
