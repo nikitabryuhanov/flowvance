@@ -18,6 +18,10 @@ import random
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.template.loader import render_to_string
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from datetime import timedelta
 
 @login_required
 def request_password_reset(request):
@@ -29,28 +33,55 @@ def request_password_reset(request):
             messages.error(request, "Введённый email не совпадает с указанным в вашем профиле.")
             return redirect('request_password_reset')
 
+        # Удаляем старые коды
+        PasswordResetCode.objects.filter(user=request.user).delete()
+        
         code = str(random.randint(100000, 999999))
         PasswordResetCode.objects.create(user=request.user, code=code)
 
-        send_mail(
-            'Код сброса пароля',
-            f'Ваш код сброса пароля: {code}',
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            fail_silently=False
-        )
-
-        request.session['reset_email'] = email
-        return redirect('reset_password')
+        try:
+            send_mail(
+                'Код сброса пароля',
+                f'Ваш код сброса пароля: {code}',
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False
+            )
+            request.session['reset_email'] = email
+            messages.success(request, "Код сброса пароля отправлен на вашу почту.")
+            return redirect('reset_password')
+        except Exception:
+            messages.error(request, "Не удалось отправить код. Попробуйте позже.")
 
     return render(request, 'core/request_reset.html')
 
 def reset_password(request):
     email = request.session.get('reset_email')
+    if not email:
+        return redirect('request_password_reset')
 
     if request.method == 'POST':
         code = request.POST.get('code')
         new_password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+
+        # Проверка совпадения паролей
+        if new_password != confirm_password:
+            messages.error(request, "Пароли не совпадают.")
+            return render(request, 'core/reset_password.html')
+
+        # Проверка сложности пароля
+        if len(new_password) < 8:
+            messages.error(request, "Пароль должен содержать минимум 8 символов.")
+            return render(request, 'core/reset_password.html')
+        
+        if not any(char.isdigit() for char in new_password):
+            messages.error(request, "Пароль должен содержать хотя бы одну цифру.")
+            return render(request, 'core/reset_password.html')
+        
+        if not any(char.isalpha() for char in new_password):
+            messages.error(request, "Пароль должен содержать хотя бы одну букву.")
+            return render(request, 'core/reset_password.html')
 
         try:
             user = CustomUser.objects.get(email=email)
@@ -60,7 +91,8 @@ def reset_password(request):
                 user.set_password(new_password)
                 user.save()
                 reset_code.delete()
-                messages.success(request, "Пароль обновлён. Войдите с новым паролем.")
+                del request.session['reset_email']
+                messages.success(request, "Пароль успешно обновлён. Войдите с новым паролем.")
                 return redirect('login')
             else:
                 messages.error(request, "Неверный код.")
@@ -72,40 +104,83 @@ def reset_password(request):
 def request_email_change(request):
     if request.method == 'POST':
         new_email = request.POST.get('new_email')
-        code = str(random.randint(100000, 999999))
+        try:
+            validate_email(new_email)
+            
+            # Проверяем, не занят ли email
+            if CustomUser.objects.filter(email=new_email).exists():
+                messages.error(request, "Этот email уже используется другим пользователем.")
+                return redirect('request_email_change')
+            
+            # Удаляем старые коды
+            EmailChangeCode.objects.filter(user=request.user).delete()
+            
+            code = str(random.randint(100000, 999999))
+            EmailChangeCode.objects.create(user=request.user, new_email=new_email, code=code)
 
-        EmailChangeCode.objects.create(user=request.user, new_email=new_email, code=code)
-
-        send_mail(
-            'Подтверждение смены почты',
-            f'Вы запросили смену почты. Код подтверждения: {code}',
-            settings.DEFAULT_FROM_EMAIL,
-            [request.user.email],
-            fail_silently=False
-        )
-
-        request.session['pending_email'] = new_email
-        return redirect('confirm_email_change')
-
+            try:
+                send_mail(
+                    'Подтверждение смены почты',
+                    f'Вы запросили смену почты. Код подтверждения: {code}',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [request.user.email],
+                    fail_silently=False
+                )
+                request.session['pending_email'] = new_email
+                request.session['email_change_attempts'] = 3
+                request.session['last_code_sent'] = timezone.now().timestamp()
+                return redirect('confirm_email_change')
+            except Exception:
+                messages.error(request, "Не удалось отправить код. Попробуйте позже.")
+        except ValidationError:
+            messages.error(request, "Введите корректный email.")
     return render(request, 'core/request_email_change.html')
 
 def confirm_email_change(request):
+    if 'pending_email' not in request.session:
+        return redirect('request_email_change')
+    
     if request.method == 'POST':
         code = request.POST.get('code')
         user = request.user
         new_email = request.session.get('pending_email')
-
-        confirmation = EmailChangeCode.objects.filter(user=user, new_email=new_email, code=code).last()
+        
+        # Проверяем количество попыток
+        attempts = request.session.get('email_change_attempts', 3)
+        if attempts <= 0:
+            messages.error(request, "Превышено количество попыток. Запросите новый код.")
+            del request.session['pending_email']
+            del request.session['email_change_attempts']
+            return redirect('request_email_change')
+        
+        confirmation = EmailChangeCode.objects.filter(
+            user=user,
+            new_email=new_email,
+            code=code
+        ).last()
+        
         if confirmation:
             user.email = new_email
             user.save()
             confirmation.delete()
+            del request.session['pending_email']
+            del request.session['email_change_attempts']
             messages.success(request, "Почта успешно изменена.")
             return redirect('profile')
-
-        messages.error(request, "Неверный код.")
-
-    return render(request, 'core/confirm_email_change.html')
+        
+        # Уменьшаем количество попыток
+        request.session['email_change_attempts'] = attempts - 1
+        messages.error(request, f"Неверный код. Осталось попыток: {attempts - 1}")
+    
+    # Проверяем, можно ли отправить код повторно
+    last_sent = request.session.get('last_code_sent', 0)
+    time_passed = timezone.now().timestamp() - last_sent
+    can_resend = time_passed >= 60
+    
+    return render(request, 'core/confirm_email_change.html', {
+        'can_resend': can_resend,
+        'time_remaining': max(0, 60 - int(time_passed))
+    })
 
 @login_required
 def profile_view(request):
@@ -115,6 +190,9 @@ def profile_view(request):
         notifications = request.POST.get('receive_notifications') == 'on'
         avatar = request.FILES.get('avatar')
         remove_avatar = request.POST.get('remove_avatar') == 'on'
+
+        # Проверяем, изменился ли статус уведомлений
+        notifications_changed = notifications != request.user.receive_notifications
 
         if username:
             request.user.username = username
@@ -134,7 +212,24 @@ def profile_view(request):
             request.user.avatar = avatar
 
         request.user.save()
-        messages.success(request, "Профиль обновлён.")
+
+        # Если уведомления были включены, отправляем тестовое уведомление
+        if notifications_changed and notifications:
+            try:
+                send_mail(
+                    'Тестовое уведомление',
+                    'Поздравляем! Вы успешно включили получение уведомлений в Flowvance. '
+                    'Теперь вы будете получать важные уведомления о ваших задачах и событиях.',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [request.user.email],
+                    fail_silently=False
+                )
+                messages.success(request, "Профиль обновлён. Тестовое уведомление отправлено на вашу почту.")
+            except Exception:
+                messages.warning(request, "Профиль обновлён, но не удалось отправить тестовое уведомление.")
+        else:
+            messages.success(request, "Профиль обновлён.")
+            
         return redirect('profile')
 
     return render(request, 'core/profile.html')
@@ -363,8 +458,23 @@ def category_create(request):
 @login_required
 def category_delete(request, pk):
     category = get_object_or_404(Category, pk=pk, user=request.user)
-    category.delete()
-    return redirect('category_list')
+    
+    if request.method == 'POST':
+        category.delete()
+        # Проверяем, остались ли еще категории
+        remaining_categories = Category.objects.filter(user=request.user).exists()
+        if not remaining_categories:
+            messages.info(request, 'Вы удалили последнюю категорию. Вы можете создать новую или вернуться к задачам.')
+            return redirect('category_list')
+        return redirect('category_list')
+    
+    # Проверяем, является ли это последней категорией
+    is_last_category = Category.objects.filter(user=request.user).count() == 1
+    
+    return render(request, 'core/category_confirm_delete.html', {
+        'category': category,
+        'is_last_category': is_last_category
+    })
 
 @login_required
 def assign_category(request, task_id):
