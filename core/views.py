@@ -464,6 +464,7 @@ def category_delete(request, pk):
     
     if request.method == 'POST':
         category.delete()
+        messages.success(request, f'Категория "{category.name}" успешно удалена.')
         # Проверяем, остались ли еще категории
         remaining_categories = Category.objects.filter(user=request.user).exists()
         if not remaining_categories:
@@ -473,10 +474,13 @@ def category_delete(request, pk):
     
     # Проверяем, является ли это последней категорией
     is_last_category = Category.objects.filter(user=request.user).count() == 1
-    
+    # Проверяем, есть ли связанные задачи
+    has_related_tasks = category.task_set.exists()
+
     return render(request, 'core/category_confirm_delete.html', {
         'category': category,
-        'is_last_category': is_last_category
+        'is_last_category': is_last_category,
+        'has_related_tasks': has_related_tasks
     })
 
 @login_required

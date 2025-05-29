@@ -10,6 +10,9 @@
         {% if is_last_category %}
         <p class="mb-0"><strong>Внимание!</strong> Это ваша последняя категория.</p>
         {% endif %}
+        {% if has_related_tasks %}
+        <p class="mb-0"><strong>Внимание!</strong> В этой категории есть связанные задачи. При удалении категории они останутся без категории.</p>
+        {% endif %}
     </div>
 
     <form method="post">
