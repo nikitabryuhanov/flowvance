@@ -1,16 +1,37 @@
-<h3>Восстановление пароля</h3>
+{% extends 'base.html' %}
+{% block title %}Запрос сброса пароля | Flowvance{% endblock %}
 
-<form method="post">
-    {% csrf_token %}
-    <label for="email">Введите ваш email:</label>
-    <input type="email" name="email" required class="form-control mb-3" placeholder="example@mail.com">
-    <button class="btn btn-primary" type="submit">Отправить код</button>
-</form>
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Запрос сброса пароля</h2>
 
-{% if messages %}
-  <ul class="messages mt-3">
-    {% for message in messages %}
-      <li class="{{ message.tags }}">{{ message }}</li>
-    {% endfor %}
-  </ul>
-{% endif %}
+    {% if messages %}
+    <div class="messages mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <p>Введите email, указанный в вашем профиле, для получения кода сброса пароля.</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" name="email" id="email" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Отправить код</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{% url 'profile' %}" class="btn btn-link">← Назад к профилю</a>
+    </div>
+</div>
+{% endblock %}
