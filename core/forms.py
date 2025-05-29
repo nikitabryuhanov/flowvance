@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser, Task, Category
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from .models import CustomUser
 
 class RegisterForm(UserCreationForm):
@@ -32,6 +33,18 @@ class TaskForm(forms.ModelForm):
         if user:
             self.fields['categories'].queryset = Category.objects.filter(user=user)
         self.fields['categories'].required = False
+
+    def clean_due_date(self):
+        due_date = self.cleaned_data.get('due_date')
+        if due_date and due_date < timezone.now():
+            # Добавляем предупреждение, а не ошибку валидации,
+            # чтобы позволить создать просроченную задачу.
+            # messages.warning не работает напрямую в clean методах формы.
+            # Вместо этого добавим некритическую ошибку формы, которую шаблон отобразит.
+            # В реальном приложении, возможно, лучше использовать отдельный non-field error
+            # или кастомный способ обработки предупреждений в форме.
+            self.add_error('due_date', "Внимание: Выбранная дата дедлайна уже прошла. Задача будет считаться просроченной.")
+        return due_date
 
 class CustomRegisterForm(UserCreationForm):
     class Meta:
