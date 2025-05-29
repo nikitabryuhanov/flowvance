@@ -1,6 +1,69 @@
-<h3>Подтверждение смены почты</h3>
-<form method="post">
-    {% csrf_token %}
-    <input type="text" name="code" placeholder="Введите код" class="form-control mb-3" required>
-    <button class="btn btn-success">Подтвердить</button>
-</form>
+{% extends 'base.html' %}
+{% block title %}Подтверждение смены почты | Flowvance{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Подтверждение смены почты</h2>
+
+    {% if messages %}
+    <div class="messages mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <p>Введите код подтверждения, отправленный на вашу текущую почту.</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="code" class="form-label">Код подтверждения</label>
+                    <input type="text" name="code" id="code" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Подтвердить</button>
+            </form>
+
+            <div class="mt-3">
+                {% if can_resend %}
+                <form method="post" action="{% url 'request_email_change' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="new_email" value="{{ request.session.pending_email }}">
+                    <button type="submit" class="btn btn-outline-primary">Отправить код повторно</button>
+                </form>
+                {% else %}
+                <p class="text-muted">Повторная отправка кода будет доступна через {{ time_remaining }} секунд</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{% url 'profile' %}" class="btn btn-link">← Назад к профилю</a>
+    </div>
+</div>
+
+{% if not can_resend %}
+{% block extra_js %}
+<script>
+    // Обновление таймера каждую секунду
+    let timeRemaining = {{ time_remaining }};
+    const timerElement = document.querySelector('.text-muted');
+    
+    const timer = setInterval(() => {
+        timeRemaining--;
+        if (timeRemaining <= 0) {
+            clearInterval(timer);
+            location.reload();
+        } else {
+            timerElement.textContent = `Повторная отправка кода будет доступна через ${timeRemaining} секунд`;
+        }
+    }, 1000);
+</script>
+{% endblock %}
+{% endif %}
+{% endblock %}
