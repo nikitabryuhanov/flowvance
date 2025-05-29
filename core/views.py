@@ -367,9 +367,12 @@ def task_edit(request, pk):
 @login_required
 def task_delete(request, pk):
     task = get_object_or_404(Task, pk=pk, user=request.user)
+    
     if request.method == 'POST':
         task.delete()
+        messages.success(request, "Задача успешно удалена.")
         return redirect('tasks')
+    
     return render(request, 'core/task_confirm_delete.html', {'task': task})
 
 def register_view(request):
