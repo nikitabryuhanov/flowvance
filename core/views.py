@@ -353,8 +353,11 @@ def category_create(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         if name:
-            Category.objects.create(name=name, user=request.user)
-            return redirect('category_list')
+            try:
+                Category.objects.create(name=name, user=request.user)
+                return redirect('category_list')
+            except:
+                messages.error(request, 'Категория с таким названием уже существует. Пожалуйста, выберите другое название.')
     return render(request, 'core/category_form.html')
 
 @login_required
