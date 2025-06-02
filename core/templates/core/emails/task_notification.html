@@ -1,10 +1,48 @@
 <h2 style="color:#0d6efd;">Привет, {{ user.username }} 👋</h2>
 
+<p>Вот обзор твоих задач:</p>
+
+{% if in_progress %}
+<p><strong style="color:#0d6efd;">🔄 В процессе:</strong></p>
+<ul>
+    {% for task in in_progress %}
+    <li>
+        <strong>{{ task.title }}</strong>
+        <br>
+        Статус: В процессе
+        <br>
+        Дедлайн: {{ task.due_date|date:"d.m.Y H:i" }}
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if planned %}
+<p><strong style="color:#198754;">📋 Запланировано:</strong></p>
+<ul>
+    {% for task in planned %}
+    <li>
+        <strong>{{ task.title }}</strong>
+        <br>
+        Статус: Запланировано
+        <br>
+        Дедлайн: {{ task.due_date|date:"d.m.Y H:i" }}
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
 {% if upcoming %}
-<p><strong>📅 Завтра нужно выполнить:</strong></p>
+<p><strong style="color:#ffc107;">📅 Завтра нужно выполнить:</strong></p>
 <ul>
     {% for task in upcoming %}
-    <li><strong>{{ task.title }}</strong> — до {{ task.due_date|date:"d.m.Y H:i" }}</li>
+    <li>
+        <strong>{{ task.title }}</strong>
+        <br>
+        Статус: {{ task.get_status_display }}
+        <br>
+        Дедлайн: {{ task.due_date|date:"d.m.Y H:i" }}
+    </li>
     {% endfor %}
 </ul>
 {% endif %}
@@ -13,7 +51,13 @@
 <p><strong style="color:#dc3545;">⚠️ Просроченные задачи:</strong></p>
 <ul>
     {% for task in overdue %}
-    <li><strong>{{ task.title }}</strong> — до {{ task.due_date|date:"d.m.Y H:i" }}</li>
+    <li>
+        <strong>{{ task.title }}</strong>
+        <br>
+        Статус: {{ task.get_status_display }}
+        <br>
+        Дедлайн: {{ task.due_date|date:"d.m.Y H:i" }}
+    </li>
     {% endfor %}
 </ul>
 {% endif %}

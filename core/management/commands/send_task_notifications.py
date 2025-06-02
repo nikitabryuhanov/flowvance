@@ -21,29 +21,32 @@ class Command(BaseCommand):
         users = CustomUser.objects.filter(receive_notifications=True)
 
         for user in users:
-            upcoming = Task.objects.filter(
+            # Получаем все активные задачи пользователя
+            all_tasks = Task.objects.filter(
                 user=user,
-                due_date__range=(start, end),
                 status__in=['planned', 'in_progress']
-            )
-            overdue = Task.objects.filter(
-                user=user,
-                due_date__lt=now_local,
-                status__in=['planned', 'in_progress']
-            )
+            ).order_by('due_date')
 
-            if upcoming.exists() or overdue.exists():
+            # Разделяем задачи на категории
+            upcoming = all_tasks.filter(due_date__range=(start, end))
+            overdue = all_tasks.filter(due_date__lt=now_local)
+            in_progress = all_tasks.filter(status='in_progress')
+            planned = all_tasks.filter(status='planned')
+
+            if all_tasks.exists():
                 html_message = render_to_string('core/emails/task_notification.html', {
                     'user': user,
                     'upcoming': upcoming,
                     'overdue': overdue,
+                    'in_progress': in_progress,
+                    'planned': planned,
                     'site_url': 'http://127.0.0.1:8000'  # замените на прод-адрес при деплое
                 })
 
                 plain_message = strip_tags(html_message)
 
                 send_mail(
-                    subject="📌 Напоминание о задачах — Flowvance",
+                    subject="📌 Обзор ваших задач — Flowvance",
                     message=plain_message,
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[user.email],
