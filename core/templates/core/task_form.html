@@ -9,6 +9,18 @@
             background-color: #f8f9fa;
             padding-bottom: 80px;
         }
+        .errorlist {
+            color: #dc3545;
+            list-style: none;
+            padding-left: 0;
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+        }
+        .form-text {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -17,29 +29,85 @@
     <form method="post">
         {% csrf_token %}
         <div class="mb-3">
-    {{ form.title.label_tag }}
-    {{ form.title }}
-</div>
+            {{ form.title.label_tag }}
+            {{ form.title }}
+            <div class="form-text">Введите название задачи (минимум 3 символа)</div>
+            {% if form.title.errors %}
+            <ul class="errorlist">
+                {% for error in form.title.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
 
-<div class="mb-3">
-    {{ form.description.label_tag }}
-    {{ form.description }}
-</div>
+        <div class="mb-3">
+            {{ form.description.label_tag }}
+            {{ form.description }}
+            <div class="form-text">Введите описание задачи (максимум 1000 символов)</div>
+            {% if form.description.errors %}
+            <ul class="errorlist">
+                {% for error in form.description.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
 
-<div class="mb-3">
-    {{ form.due_date.label_tag }}
-    {{ form.due_date }}
-</div>
+        <div class="mb-3">
+            {{ form.due_date.label_tag }}
+            {{ form.due_date }}
+            <div class="form-text">Выберите дату и время дедлайна</div>
+            {% if form.due_date.errors %}
+            <ul class="errorlist">
+                {% for error in form.due_date.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
 
-<div class="mb-3">
-    {{ form.priority.label_tag }}
-    {{ form.priority }}
-</div>
+        <div class="mb-3">
+            {{ form.priority.label_tag }}
+            {{ form.priority }}
+            <div class="form-text">Выберите приоритет задачи</div>
+            {% if form.priority.errors %}
+            <ul class="errorlist">
+                {% for error in form.priority.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
 
-<div class="mb-3">
-    {{ form.status.label_tag }}
-    {{ form.status }}
-</div>
+        <div class="mb-3">
+            {{ form.status.label_tag }}
+            {{ form.status }}
+            <div class="form-text">Выберите текущий статус задачи</div>
+            {% if form.status.errors %}
+            <ul class="errorlist">
+                {% for error in form.status.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+
+        {% if 'categories' in form.fields %}
+        <div class="mb-3">
+            {{ form.categories.label_tag }}
+            {{ form.categories }}
+            <div class="form-text">Выберите категории для задачи</div>
+            {% if form.categories.errors %}
+            <ul class="errorlist">
+                {% for error in form.categories.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <button type="submit" class="btn btn-success">Сохранить</button>
         <a href="{% url 'tasks' %}" class="btn btn-secondary">Назад</a>
     </form>

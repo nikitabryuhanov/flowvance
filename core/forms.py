@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser, Task, Category
 from django.core.exceptions import ValidationError
 from .models import CustomUser
+from django.utils import timezone
 
 class RegisterForm(UserCreationForm):
     class Meta:
@@ -13,6 +14,14 @@ class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
         fields = ['title', 'description', 'due_date', 'priority', 'status', 'categories']
+        labels = {
+            'title': 'Название',
+            'description': 'Описание',
+            'due_date': 'Дедлайн',
+            'priority': 'Приоритет',
+            'status': 'Статус',
+            'categories': 'Категории'
+        }
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control'}),
@@ -30,8 +39,31 @@ class TaskForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if user:
-            self.fields['categories'].queryset = Category.objects.filter(user=user)
-        self.fields['categories'].required = False
+            categories = Category.objects.filter(user=user)
+            if categories.exists():
+                self.fields['categories'].queryset = categories
+            else:
+                self.fields.pop('categories')
+
+    def clean_title(self):
+        title = self.cleaned_data.get('title')
+        if not title:
+            raise ValidationError('Название не может быть пустым')
+        if len(title) < 3:
+            raise ValidationError('Название должно содержать минимум 3 символа')
+        return title
+
+    def clean_description(self):
+        description = self.cleaned_data.get('description')
+        if description and len(description) > 1000:
+            raise ValidationError('Описание не может быть длиннее 1000 символов')
+        return description
+
+    def clean_due_date(self):
+        due_date = self.cleaned_data.get('due_date')
+        if due_date and due_date < timezone.now():
+            raise ValidationError('Дедлайн не может быть в прошлом')
+        return due_date
 
 class CustomRegisterForm(UserCreationForm):
     class Meta:

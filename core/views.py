@@ -346,22 +346,28 @@ def task_list(request):
 
 @login_required
 def task_create(request):
-    form = TaskForm(request.POST or None, user=request.user)
-    if request.method == 'POST' and form.is_valid():
-        task = form.save(commit=False)
-        task.user = request.user
-        task.save()
-        form.save_m2m()
-        return redirect('tasks')
+    if request.method == 'POST':
+        form = TaskForm(request.POST, user=request.user)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.user = request.user
+            task.save()
+            form.save_m2m()
+            return redirect('tasks')
+    else:
+        form = TaskForm(user=request.user)
     return render(request, 'core/task_form.html', {'form': form})
 
 @login_required
 def task_edit(request, pk):
     task = get_object_or_404(Task, pk=pk, user=request.user)
-    form = TaskForm(request.POST or None, instance=task, user=request.user)
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-        return redirect('tasks')
+    if request.method == 'POST':
+        form = TaskForm(request.POST, instance=task, user=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('tasks')
+    else:
+        form = TaskForm(instance=task, user=request.user)
     return render(request, 'core/task_form.html', {'form': form})
 
 @login_required
