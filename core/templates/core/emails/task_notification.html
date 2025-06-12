@@ -1,65 +1,118 @@
-<h2 style="color:#0d6efd;">Привет, {{ user.username }} 👋</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4a90e2;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 0 0 5px 5px;
+        }
+        .task-list {
+            margin: 15px 0;
+        }
+        .task-item {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: white;
+            border-left: 4px solid #4a90e2;
+        }
+        .overdue {
+            border-left-color: #e74c3c;
+        }
+        .upcoming {
+            border-left-color: #2ecc71;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Обзор ваших задач</h1>
+        </div>
+        <div class="content">
+            <p>Здравствуйте, {{ user.username }}!</p>
+            
+            {% if overdue %}
+            <h2>Просроченные задачи</h2>
+            <div class="task-list">
+                {% for task in overdue %}
+                <div class="task-item overdue">
+                    <h3>{{ task.title }}</h3>
+                    <p>Срок выполнения: {{ task.due_date }}</p>
+                    <p>Приоритет: {{ task.get_priority_display }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
 
-<p>Вот обзор твоих задач:</p>
+            {% if upcoming %}
+            <h2>Задачи на завтра</h2>
+            <div class="task-list">
+                {% for task in upcoming %}
+                <div class="task-item upcoming">
+                    <h3>{{ task.title }}</h3>
+                    <p>Срок выполнения: {{ task.due_date }}</p>
+                    <p>Приоритет: {{ task.get_priority_display }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
 
-{% if in_progress %}
-<p><strong style="color:#0d6efd;">🔄 В процессе:</strong></p>
-<ul>
-    {% for task in in_progress %}
-    <li>
-        <strong>{{ task.title }}</strong>
-        <br>
-        Статус: В процессе
-        <br>
-        Дедлайн: {{ task.due_date|date:"d.m.Y H:i" }}
-    </li>
-    {% endfor %}
-</ul>
-{% endif %}
+            {% if in_progress %}
+            <h2>Задачи в процессе</h2>
+            <div class="task-list">
+                {% for task in in_progress %}
+                <div class="task-item">
+                    <h3>{{ task.title }}</h3>
+                    <p>Срок выполнения: {{ task.due_date }}</p>
+                    <p>Приоритет: {{ task.get_priority_display }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
 
-{% if planned %}
-<p><strong style="color:#198754;">📋 Запланировано:</strong></p>
-<ul>
-    {% for task in planned %}
-    <li>
-        <strong>{{ task.title }}</strong>
-        <br>
-        Статус: Запланировано
-        <br>
-        Дедлайн: {{ task.due_date|date:"d.m.Y H:i" }}
-    </li>
-    {% endfor %}
-</ul>
-{% endif %}
+            {% if planned %}
+            <h2>Запланированные задачи</h2>
+            <div class="task-list">
+                {% for task in planned %}
+                <div class="task-item">
+                    <h3>{{ task.title }}</h3>
+                    <p>Срок выполнения: {{ task.due_date }}</p>
+                    <p>Приоритет: {{ task.get_priority_display }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
 
-{% if upcoming %}
-<p><strong style="color:#ffc107;">📅 Завтра нужно выполнить:</strong></p>
-<ul>
-    {% for task in upcoming %}
-    <li>
-        <strong>{{ task.title }}</strong>
-        <br>
-        Статус: {{ task.get_status_display }}
-        <br>
-        Дедлайн: {{ task.due_date|date:"d.m.Y H:i" }}
-    </li>
-    {% endfor %}
-</ul>
-{% endif %}
-
-{% if overdue %}
-<p><strong style="color:#dc3545;">⚠️ Просроченные задачи:</strong></p>
-<ul>
-    {% for task in overdue %}
-    <li>
-        <strong>{{ task.title }}</strong>
-        <br>
-        Статус: {{ task.get_status_display }}
-        <br>
-        Дедлайн: {{ task.due_date|date:"d.m.Y H:i" }}
-    </li>
-    {% endfor %}
-</ul>
-{% endif %}
-
-<p>Не забудь зайти в <a href="{{ site_url }}">Flowvance</a> и разобраться с задачами 💪</p>
+            <p>Для просмотра всех задач перейдите в <a href="{{ site_url }}/tasks/">личный кабинет</a>.</p>
+        </div>
+        <div class="footer">
+            <p>Это автоматическое уведомление от Flowvance. Пожалуйста, не отвечайте на это письмо.</p>
+        </div>
+    </div>
+</body>
+</html>

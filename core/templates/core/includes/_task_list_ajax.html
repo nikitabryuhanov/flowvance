@@ -13,7 +13,7 @@
                 </span>
                 <p class="card-text mt-2">{{ task.description }}</p>
                 <small class="text-muted">Создана: {{ task.created_at|date:"d.m.Y H:i" }}</small><br>
-                <small class="text-muted">Дедлайн: {{ task.due_date }}</small><br>
+                <small class="text-muted">Дедлайн: {{ task.due_date|date:"d E Y, H:i" }}</small><br>
                 <small>Приоритет: {{ task.get_priority_display }}</small>
             </div>
 

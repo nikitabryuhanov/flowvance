@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 import uuid
+from django.utils import timezone
+from datetime import timedelta
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
@@ -38,7 +40,11 @@ class Task(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    due_date = models.DateTimeField(verbose_name="Дедлайн", null=True, blank=True)
+    due_date = models.DateTimeField(
+        verbose_name="Дедлайн",
+        null=True,
+        blank=True
+    )
     completed_at = models.DateTimeField(null=True, blank=True)
     priority = models.CharField(max_length=1, choices=PRIORITY_CHOICES, default='2')
     status = models.CharField(
@@ -51,6 +57,11 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.due_date:
+            self.due_date = timezone.now() + timedelta(days=1, hours=12)
+        super().save(*args, **kwargs)
 
 class PasswordResetCode(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)

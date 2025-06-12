@@ -4,6 +4,7 @@ from .models import CustomUser, Task, Category
 from django.core.exceptions import ValidationError
 from .models import CustomUser
 from django.utils import timezone
+from datetime import timedelta
 
 class RegisterForm(UserCreationForm):
     class Meta:
@@ -44,6 +45,12 @@ class TaskForm(forms.ModelForm):
                 self.fields['categories'].queryset = categories
             else:
                 self.fields.pop('categories')
+        
+        # Устанавливаем начальное значение для дедлайна
+        if not self.instance.pk:  # Только для новых задач
+            tomorrow = timezone.now() + timedelta(days=1)
+            tomorrow = tomorrow.replace(hour=12, minute=0, second=0, microsecond=0)
+            self.initial['due_date'] = tomorrow
 
     def clean_title(self):
         title = self.cleaned_data.get('title')

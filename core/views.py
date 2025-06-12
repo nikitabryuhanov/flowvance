@@ -22,6 +22,7 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import timedelta
+from django.utils.html import strip_tags
 
 @login_required
 def request_password_reset(request):
@@ -136,51 +137,61 @@ def request_email_change(request):
             messages.error(request, "Введите корректный email.")
     return render(request, 'core/request_email_change.html')
 
+@login_required
 def confirm_email_change(request):
-    if 'pending_email' not in request.session:
-        return redirect('request_email_change')
-    
     if request.method == 'POST':
         code = request.POST.get('code')
-        user = request.user
-        new_email = request.session.get('pending_email')
-        
-        # Проверяем количество попыток
-        attempts = request.session.get('email_change_attempts', 3)
-        if attempts <= 0:
-            messages.error(request, "Превышено количество попыток. Запросите новый код.")
-            del request.session['pending_email']
-            del request.session['email_change_attempts']
-            return redirect('request_email_change')
-        
-        confirmation = EmailChangeCode.objects.filter(
-            user=user,
-            new_email=new_email,
-            code=code
-        ).last()
-        
-        if confirmation:
-            user.email = new_email
-            user.save()
-            confirmation.delete()
-            del request.session['pending_email']
-            del request.session['email_change_attempts']
-            messages.success(request, "Почта успешно изменена.")
+        try:
+            email_change = EmailChangeCode.objects.get(
+                user=request.user,
+                code=code,
+                created_at__gte=timezone.now() - timedelta(hours=24)
+            )
+            
+            old_email = request.user.email
+            request.user.email = email_change.new_email
+            request.user.save()
+            
+            # Отправляем уведомление о смене email
+            try:
+                html_message = render_to_string('core/emails/email_changed.html', {
+                    'user': request.user,
+                    'old_email': old_email,
+                    'new_email': email_change.new_email,
+                    'change_time': timezone.now().strftime('%d.%m.%Y %H:%M'),
+                    'ip_address': request.META.get('REMOTE_ADDR', 'Неизвестно')
+                })
+                plain_message = strip_tags(html_message)
+                
+                # Отправляем уведомление на старый email
+                send_mail(
+                    subject="Email изменен — Flowvance",
+                    message=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[old_email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                
+                # Отправляем уведомление на новый email
+                send_mail(
+                    subject="Email изменен — Flowvance",
+                    message=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email_change.new_email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                
+                messages.success(request, 'Email успешно изменен. На оба адреса отправлены уведомления.')
+            except Exception as e:
+                messages.warning(request, 'Email изменен, но не удалось отправить уведомления на почту.')
+            
+            email_change.delete()
             return redirect('profile')
-        
-        # Уменьшаем количество попыток
-        request.session['email_change_attempts'] = attempts - 1
-        messages.error(request, f"Неверный код. Осталось попыток: {attempts - 1}")
-    
-    # Проверяем, можно ли отправить код повторно
-    last_sent = request.session.get('last_code_sent', 0)
-    time_passed = timezone.now().timestamp() - last_sent
-    can_resend = time_passed >= 60
-    
-    return render(request, 'core/confirm_email_change.html', {
-        'can_resend': can_resend,
-        'time_remaining': max(0, 60 - int(time_passed))
-    })
+        except EmailChangeCode.DoesNotExist:
+            messages.error(request, 'Неверный или устаревший код подтверждения.')
+    return render(request, 'core/confirm_email_change.html')
 
 @login_required
 def profile_view(request):
@@ -236,11 +247,36 @@ def profile_view(request):
 
 @login_required
 def change_password(request):
-    form = PasswordChangeForm(user=request.user, data=request.POST or None)
-    if request.method == 'POST' and form.is_valid():
-        user = form.save()
-        update_session_auth_hash(request, user)
-        return redirect('profile')
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            
+            # Отправляем уведомление о смене пароля
+            try:
+                html_message = render_to_string('core/emails/password_changed.html', {
+                    'user': request.user,
+                    'change_time': timezone.now().strftime('%d.%m.%Y %H:%M'),
+                    'ip_address': request.META.get('REMOTE_ADDR', 'Неизвестно')
+                })
+                plain_message = strip_tags(html_message)
+                
+                send_mail(
+                    subject="Пароль изменен — Flowvance",
+                    message=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[request.user.email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                messages.success(request, 'Пароль успешно изменен. На вашу почту отправлено уведомление.')
+            except Exception as e:
+                messages.warning(request, 'Пароль изменен, но не удалось отправить уведомление на почту.')
+            
+            return redirect('profile')
+    else:
+        form = PasswordChangeForm(request.user)
     return render(request, 'core/change_password.html', {'form': form})
 
 @login_required

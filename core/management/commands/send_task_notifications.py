@@ -15,36 +15,38 @@ class Command(BaseCommand):
         today = now_local.date()
         tomorrow = today + timedelta(days=1)
 
-        start = make_aware(dt.combine(tomorrow, dt.min.time()))
-        end = make_aware(dt.combine(tomorrow, dt.max.time()))
-
+        # Получаем всех пользователей, у которых включены уведомления
         users = CustomUser.objects.filter(receive_notifications=True)
 
         for user in users:
-            # Получаем все активные задачи пользователя
-            all_tasks = Task.objects.filter(
-                user=user,
+            # Получаем задачи пользователя
+            user_tasks = Task.objects.filter(user=user)
+
+            # Просроченные задачи
+            overdue = user_tasks.filter(
+                due_date__lt=today,
                 status__in=['planned', 'in_progress']
-            ).order_by('due_date')
+            )
 
-            # Разделяем задачи на категории
-            # Просроченные задачи (статус planned или in_progress, дата в прошлом)
-            overdue = all_tasks.filter(due_date__lt=now_local)
+            # Задачи на завтра
+            upcoming = user_tasks.filter(
+                due_date=tomorrow,
+                status__in=['planned', 'in_progress']
+            )
 
-            # Задачи, которые еще не просрочены
-            not_overdue_tasks = all_tasks.filter(due_date__gte=now_local)
+            # Задачи в процессе
+            in_progress = user_tasks.filter(
+                status='in_progress'
+            ).exclude(id__in=upcoming.values_list('id', flat=True))
 
-            # Задачи в процессе (не просроченные)
-            in_progress = not_overdue_tasks.filter(status='in_progress')
+            # Запланированные задачи
+            planned = user_tasks.filter(
+                status='planned',
+                due_date__gt=tomorrow
+            ).exclude(id__in=upcoming.values_list('id', flat=True))
 
-            # Запланированные задачи (не просроченные)
-            planned = not_overdue_tasks.filter(status='planned')
-
-            # Предстоящие задачи (на завтра, из не просроченных)
-            upcoming = not_overdue_tasks.filter(due_date__range=(start, end))
-
-            # Отправляем письмо, только если есть любые активные задачи (просроченные, в процессе, запланированные)
-            if all_tasks.exists():
+            # Отправляем письмо, только если есть любые активные задачи
+            if any([overdue.exists(), upcoming.exists(), in_progress.exists(), planned.exists()]):
                 html_message = render_to_string('core/emails/task_notification.html', {
                     'user': user,
                     'upcoming': upcoming,
@@ -56,14 +58,17 @@ class Command(BaseCommand):
 
                 plain_message = strip_tags(html_message)
 
-                send_mail(
-                    subject="📌 Обзор ваших задач — Flowvance",
-                    message=plain_message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[user.email],
-                    html_message=html_message,
-                    fail_silently=True,
-                )
+                try:
+                    send_mail(
+                        subject="📌 Обзор ваших задач — Flowvance",
+                        message=plain_message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[user.email],
+                        html_message=html_message,
+                        fail_silently=True,
+                    )
+                    self.stdout.write(f"Уведомление отправлено пользователю {user.email}")
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"Ошибка отправки уведомления пользователю {user.email}: {str(e)}"))
 
-        # Сообщение об успешной отправке, даже если писем не было отправлено (например, нет пользователей с уведомлениями)
         self.stdout.write(self.style.SUCCESS("Уведомления успешно отправлены."))
