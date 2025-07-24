@@ -23,7 +23,7 @@
 - 📅 Interactive calendar view (FullCalendar.js)  
 - 📊 Task statistics and visual analytics (Chart.js)  
 - 👤 User profile with customizable settings  
-- 🔔 Notifications (planned feature)
+- 🔔 Notifications
 
 ---
 
@@ -91,7 +91,7 @@ Flowvance — это веб-приложение для управления з�
 - 📅 Интерактивный календарь (FullCalendar.js)
 - 📊 Статистика и аналитика задач (Chart.js)
 - 👤 Личный кабинет с настройками
-- 🔔 Уведомления (в планах)
+- 🔔 Уведомления
 
 ---
 
