@@ -75,6 +75,7 @@ in the subject of Web Application Development. It demonstrates full-stack skills
 ### 📬 Contact
 
 Telegram: @nikitabryuhanov
+
 Email: nikitabryuhanov@icloud.com
 
 <div id="ru"></div>
@@ -145,4 +146,5 @@ python manage.py runserver
 ### 📬 Контакты
 
 Telegram: @nikitabryuhanov
+
 Email: nikitabryuhanov@icloud.com
