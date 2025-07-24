@@ -60,7 +60,7 @@ python manage.py createsuperuser
 
 # Run the development server
 python manage.py runserver
-
+```
 ### 🧪 Usage
 
 - Open your browser and go to http://localhost:8000
@@ -128,7 +128,7 @@ python manage.py createsuperuser
 
 # Запустить сервер разработки
 python manage.py runserver
-
+```
 ### 🧪 Использование
 
 - Откройте браузер и перейдите по адресу http://localhost:8000
